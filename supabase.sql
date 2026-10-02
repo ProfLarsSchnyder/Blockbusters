@@ -138,7 +138,7 @@ begin
     now(),
     now()
   )
-  on conflict (id)
+  on conflict on constraint blockbusters_games_pkey
   do update set
     title = excluded.title,
     questions = excluded.questions,
