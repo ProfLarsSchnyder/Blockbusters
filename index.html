@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>Blockbusters</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section id="loginView" class="screen login-screen">
+    <div class="login-card">
+      <div class="brand-mark">B</div>
+      <h1>Blockbusters</h1>
+      <p class="muted">Persönlicher Adminbereich</p>
+      <form id="loginForm" class="stack">
+        <label>
+          E-Mail
+          <input id="loginEmail" type="email" autocomplete="username" required>
+        </label>
+        <label>
+          Passwort
+          <input id="loginPassword" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="btn primary" type="submit">Anmelden</button>
+        <div id="loginError" class="error"></div>
+        <div id="loginSetupHint" class="setup-hint hidden">
+          Supabase Auth ist noch nicht konfiguriert. Tragen Sie zuerst URL und Anon Key in <code>config.js</code> ein.
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <div id="app" class="hidden">
+    <header id="appHeader" class="app-header">
+      <div class="brand-row">
+        <div class="brand-mark small">B</div>
+        <div>
+          <strong>Blockbusters</strong>
+          <span class="header-sub">W&R Gameshow</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="homeBtn" class="btn ghost">Spiele</button>
+        <button id="logoutBtn" class="btn ghost">Abmelden</button>
+      </div>
+    </header>
+
+    <main id="dashboardView" class="view">
+      <div class="page-head">
+        <div>
+          <p class="eyebrow">Meine Spiele</p>
+          <h1>Blockbusters erstellen und spielen</h1>
+          <p class="muted">KI Inhalt einfügen, speichern und direkt im Unterricht starten.</p>
+        </div>
+        <button id="newGameBtn" class="btn primary large">+ Neues Spiel</button>
+      </div>
+      <div id="gamesGrid" class="games-grid"></div>
+      <div id="emptyState" class="empty-state hidden">
+        <h2>Noch kein Spiel gespeichert</h2>
+        <p>Erstellen Sie ein Spiel und fügen Sie den KI Inhalt als JSON ein.</p>
+        <button class="btn primary" id="emptyNewBtn">Erstes Spiel erstellen</button>
+      </div>
+    </main>
+
+    <main id="editorView" class="view hidden">
+      <div class="page-head compact">
+        <div>
+          <p class="eyebrow">Spiel erstellen</p>
+          <h1 id="editorHeading">Neues Spiel</h1>
+        </div>
+        <button id="cancelEditBtn" class="btn ghost">Zurück</button>
+      </div>
+
+      <div class="editor-layout">
+        <section class="panel">
+          <label class="field-label" for="gameTitleInput">Titel</label>
+          <input id="gameTitleInput" class="title-input" type="text" placeholder="z. B. Angebot und Nachfrage">
+
+          <div class="editor-toolbar">
+            <div>
+              <h2>KI Inhalt</h2>
+              <p class="muted small-text">40 Fragen sind für eine Partie ideal.</p>
+            </div>
+            <button id="copyPromptBtn" class="btn secondary">KI Prompt kopieren</button>
+          </div>
+
+          <textarea id="jsonInput" class="json-input" spellcheck="false" placeholder='{
+  "title": "Angebot und Nachfrage",
+  "questions": [
+    {
+      "type": "Transfer",
+      "question": "Die Nachfrage steigt. Was geschieht mit dem Gleichgewichtspreis?",
+      "answer": "Er steigt."
+    }
+  ]
+}'></textarea>
+
+          <div class="editor-footer">
+            <div id="parseStatus" class="parse-status muted">Noch kein Inhalt geprüft.</div>
+            <div class="button-row">
+              <button id="validateBtn" class="btn secondary">Prüfen</button>
+              <button id="saveGameBtn" class="btn primary">Spiel speichern</button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel prompt-panel">
+          <h2>Erwartetes Format</h2>
+          <p>Der Import ist absichtlich einfach. Jede Frage braucht nur Frage und Lösung, der Typ ist optional.</p>
+          <pre>{
+  "title": "Thema",
+  "questions": [
+    {
+      "type": "Rechnung",
+      "question": "...",
+      "answer": "..."
+    }
+  ]
+}</pre>
+          <p class="muted small-text">Mindestens 25 Fragen. 40 reichen in der Regel gut, weil bei unbeantworteten Fragen eine Ersatzfrage aus dem Pool gezogen wird.</p>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <section id="splashView" class="game-overlay hidden">
+    <div class="splash-content">
+      <div class="splash-brand">BLOCKBUSTERS</div>
+      <h1 id="splashTitle"></h1>
+      <p>Zum Überspringen klicken</p>
+    </div>
+  </section>
+
+  <section id="instructionsView" class="game-overlay hidden">
+    <div class="instruction-card">
+      <p class="eyebrow">Spielregeln</p>
+      <h1>So funktioniert Blockbusters</h1>
+      <div class="instruction-grid">
+        <div><span>1</span><p>Das Team mit Auswahlrecht wählt ein beliebiges freies Feld.</p></div>
+        <div><span>2</span><p>Eine zufällige Frage erscheint. Beide Teams dürfen buzzern.</p></div>
+        <div><span>3</span><p>Antwortet das erste Team falsch, ist es für diese Frage gesperrt. Das andere Team erhält allein die zweite Chance.</p></div>
+        <div><span>4</span><p>Das Feld gibt es nur für eine richtige Antwort, niemals automatisch nach einem Fehler des Gegners.</p></div>
+        <div><span>5</span><p>Weiss auch das zweite Team die Antwort nicht, bleibt das Feld offen und es kommt eine neue Frage.</p></div>
+        <div><span>6</span><p>Wer richtig antwortet, gewinnt das Feld und erhält das nächste Auswahlrecht.</p></div>
+        <div><span>7</span><p>Team 1 verbindet links mit rechts, Team 2 oben mit unten.</p></div>
+        <div><span>8</span><p>Erste vollständige Verbindung gewinnt.</p></div>
+      </div>
+      <div class="instruction-buzzer">
+        <strong>Buzzer:</strong> Team 1 drückt <kbd>A</kbd>, Team 2 drückt <kbd>L</kbd>. Alternativ können die grossen Buzzerflächen auf dem Bildschirm angeklickt werden.
+      </div>
+      <button id="instructionsNextBtn" class="btn primary large">Teams einrichten</button>
+    </div>
+  </section>
+
+  <section id="teamSetupView" class="game-overlay hidden">
+    <div class="team-setup-card">
+      <p class="eyebrow">Teams</p>
+      <h1>Wer spielt?</h1>
+      <div class="team-setup-grid">
+        <div class="team-config">
+          <h2>Team 1</h2>
+          <label>Teamname<input id="team1Input" type="text" value="Team 1" maxlength="24"></label>
+          <label>Farbe</label>
+          <div id="team1Palette" class="palette"></div>
+          <p class="goal-note">Ziel: links → rechts</p>
+        </div>
+        <div class="team-config">
+          <h2>Team 2</h2>
+          <label>Teamname<input id="team2Input" type="text" value="Team 2" maxlength="24"></label>
+          <label>Farbe</label>
+          <div id="team2Palette" class="palette"></div>
+          <p class="goal-note">Ziel: oben → unten</p>
+        </div>
+      </div>
+      <div class="starter-box">
+        <strong>Wer hat zu Beginn das Auswahlrecht?</strong>
+        <div class="segmented">
+          <button id="startTeam1" class="selected">Team 1</button>
+          <button id="startTeam2">Team 2</button>
+          <button id="startRandom">Zufällig</button>
+        </div>
+      </div>
+      <div id="teamSetupError" class="error"></div>
+      <button id="startMatchBtn" class="btn primary large">Spiel starten</button>
+    </div>
+  </section>
+
+  <section id="gameView" class="game-shell hidden">
+    <header class="game-header">
+      <div>
+        <span class="game-kicker">BLOCKBUSTERS</span>
+        <strong id="matchTitle"></strong>
+      </div>
+      <button id="gameMenuBtn" class="icon-btn" aria-label="Spielmenü">☰</button>
+    </header>
+
+    <div class="game-layout">
+      <div class="board-stage">
+        <div id="board"></div>
+      </div>
+      <aside class="score-rail">
+        <div id="controlCard" class="control-card">
+          <span>Auswahlrecht</span>
+          <strong id="controlName"></strong>
+          <small>wählt das nächste Feld</small>
+        </div>
+        <div id="team1Card" class="score-card">
+          <strong id="team1Display"></strong>
+          <span>links → rechts</span>
+          <b id="team1Count">0 Felder</b>
+        </div>
+        <div id="team2Card" class="score-card">
+          <strong id="team2Display"></strong>
+          <span>oben → unten</span>
+          <b id="team2Count">0 Felder</b>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <dialog id="questionDialog" class="question-dialog">
+    <div class="question-wrap">
+      <div class="question-topline">
+        <span>Feld <b id="fieldNumber"></b></span>
+        <span id="questionType" class="question-type"></span>
+      </div>
+      <div id="questionText" class="question-text"></div>
+
+      <div id="buzzArea" class="buzz-area">
+        <button id="buzzTeam1" class="buzz-button"><span id="buzzTeam1Name"></span><kbd>A</kbd></button>
+        <button id="buzzTeam2" class="buzz-button"><span id="buzzTeam2Name"></span><kbd>L</kbd></button>
+      </div>
+
+      <div id="buzzStatus" class="buzz-status">Beide Teams dürfen buzzern.</div>
+
+      <div id="moderatorActions" class="moderator-actions hidden">
+        <button id="markCorrectBtn" class="btn success large">Richtig</button>
+        <button id="markWrongBtn" class="btn danger large">Falsch</button>
+      </div>
+
+      <div id="answerBox" class="answer-box hidden">
+        <span>Lösung</span>
+        <strong id="answerText"></strong>
+      </div>
+
+      <div class="question-footer">
+        <button id="showAnswerBtn" class="btn ghost-dark">Lösung anzeigen</button>
+        <button id="newQuestionBtn" class="btn secondary">Neue Frage</button>
+        <button id="cancelQuestionBtn" class="btn ghost-dark">Zurück zum Brett</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="gameMenuDialog">
+    <div class="dialog-card">
+      <h2>Spielmenü</h2>
+      <div class="menu-grid">
+        <button id="undoBtn" class="btn secondary">↶ Rückgängig</button>
+        <button id="restartBtn" class="btn secondary">Partie neu starten</button>
+        <button id="leaveMatchBtn" class="btn danger">Spiel verlassen</button>
+      </div>
+      <button id="closeGameMenuBtn" class="btn ghost-dark">Schliessen</button>
+    </div>
+  </dialog>
+
+  <dialog id="winnerDialog">
+    <div class="winner-card">
+      <span>BLOCKBUSTERS</span>
+      <h1 id="winnerName"></h1>
+      <p>hat die Verbindung hergestellt.</p>
+      <div class="button-row center">
+        <button id="winnerRestartBtn" class="btn primary">Nochmals spielen</button>
+        <button id="winnerHomeBtn" class="btn secondary">Zur Spieleübersicht</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
