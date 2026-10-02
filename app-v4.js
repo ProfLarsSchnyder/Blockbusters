@@ -535,7 +535,11 @@ function resetMatchState(){
 
 function poolRemainingCount(){
   if(!currentGame) return 0;
-  return Math.max(0,currentGame.questions.length - retiredQuestions.size - usedQuestions.size);
+  let remaining = 0;
+  for(let i=0;i<currentGame.questions.length;i++){
+    if(!retiredQuestions.has(i) && !usedQuestions.has(i)) remaining++;
+  }
+  return remaining;
 }
 function updatePoolDisplay(){
   const remaining = poolRemainingCount();
