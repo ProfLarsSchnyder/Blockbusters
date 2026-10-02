@@ -4,13 +4,12 @@ HTML Gameshow für den Unterricht.
 
 ## Aktueller Stand
 
-- Login über Supabase Auth
-- optional auf eine einzelne E-Mail beschränkbar
+- einfacher Passwortzugang
+- Passwort wird serverseitig in Supabase geprüft
 - Spieleübersicht
-- neue Spiele per KI JSON erstellen
+- Spiele per KI JSON erstellen und bearbeiten
 - 40 Fragen als empfohlener Fragenpool
-- Spiele aktuell lokal im Browser gespeichert
-- Beispielspiel zu Angebot und Nachfrage enthalten
+- dauerhafte Speicherung in Supabase
 - Titel Splashscreen
 - Spielanleitung
 - Teamnamen und 8 feste Teamfarben
@@ -24,20 +23,18 @@ HTML Gameshow für den Unterricht.
 - das Team mit der richtigen Antwort erhält das nächste Auswahlrecht
 - automatische Gewinnprüfung
 
-## Supabase Auth einrichten
+## Supabase
 
-In `config.js` eintragen:
+Die Projekt URL und der Publishable Key stehen in `config.js`.
 
-```js
-window.BLOCKBUSTERS_CONFIG = {
-  supabaseUrl: "IHRE_SUPABASE_URL",
-  supabaseAnonKey: "IHR_SUPABASE_ANON_KEY",
-  allowedEmail: "IHRE_EMAIL"
-};
-```
+Einmal den vollständigen Inhalt von `supabase.sql` im Supabase SQL Editor ausführen.
 
-In Supabase unter Authentication ein Benutzerkonto für diese E-Mail anlegen. Wenn nur dieses Konto Zugriff haben soll, öffentliche Registrierungen deaktivieren.
+Das aktuell konfigurierte Passwort ist:
 
-## Speicherung
+`4208`
 
-Die Spiele werden momentan in `localStorage` gespeichert. Als nächster Schritt wird die Speicherung auf Supabase umgestellt, inklusive SQL Tabelle und Row Level Security.
+Die Tabelle selbst ist für den öffentlichen API Key gesperrt. Lesen, Speichern und Löschen laufen über serverseitige Supabase Funktionen, welche das Passwort prüfen.
+
+## Hinweis zur Sicherheit
+
+Ein vierstelliger PIN ist für ein privates Unterrichtstool bequem, aber kein Hochsicherheits Login. Wer die veröffentlichte Webseite gezielt angreift, könnte einen kurzen PIN theoretisch ausprobieren. Für normale private Nutzung ist die Datenbank trotzdem besser geschützt als bei offenem Tabellenzugriff, da direkte Tabellenoperationen für den Publishable Key gesperrt sind.
