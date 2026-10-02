@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
   <title>Blockbusters</title>
-  <link rel="stylesheet" href="styles.css?v=20261003-1">
+  <link rel="stylesheet" href="styles-v2.css">
 </head>
 <body>
   <section id="loginView" class="screen login-screen">
@@ -68,54 +68,56 @@
         <button id="cancelEditBtn" class="btn ghost">Zurück</button>
       </div>
 
-      <div class="editor-layout">
+      <div class="editor-stack">
         <section class="panel">
           <label class="field-label" for="gameTitleInput">Titel</label>
-          <input id="gameTitleInput" class="title-input" type="text" placeholder="z. B. Angebot und Nachfrage">
+          <input id="gameTitleInput" class="title-input" type="text" placeholder="z. B. Konjunktur und Arbeitslosigkeit">
+        </section>
 
+        <section class="panel">
           <div class="editor-toolbar">
             <div>
-              <h2>KI Inhalt</h2>
-              <p class="muted small-text">40 Fragen sind für eine Partie ideal.</p>
+              <h2>KI Import</h2>
+              <p class="muted small-text">Optional: JSON aus ChatGPT einfügen und danach jede Frage direkt bearbeiten.</p>
             </div>
             <button id="copyPromptBtn" class="btn secondary">KI Prompt kopieren</button>
           </div>
 
-          <textarea id="jsonInput" class="json-input" spellcheck="false" placeholder='{
-  "title": "Angebot und Nachfrage",
+          <textarea id="jsonInput" class="json-input compact-json" spellcheck="false" placeholder='{
+  "title": "Konjunktur",
   "questions": [
     {
-      "type": "Transfer",
-      "question": "Die Nachfrage steigt. Was geschieht mit dem Gleichgewichtspreis?",
-      "answer": "Er steigt."
+      "type": "MC",
+      "question": "Welche Phase folgt auf die Tiefphase? A) Abschwung B) Aufschwung C) Hochkonjunktur D) Deflation",
+      "answer": "B) Aufschwung"
     }
   ]
 }'></textarea>
 
+          <div class="import-row">
+            <div class="muted small-text">Der Import ersetzt die aktuell angezeigte Fragenliste.</div>
+            <button id="importJsonBtn" class="btn secondary">JSON übernehmen</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="question-editor-head">
+            <div>
+              <h2>Fragen</h2>
+              <p class="muted small-text"><span id="questionCount">0</span> Fragen, mindestens 25, empfohlen etwa 40.</p>
+            </div>
+            <button id="addQuestionBtn" class="btn primary">+ Frage hinzufügen</button>
+          </div>
+
+          <div id="questionsList" class="questions-list"></div>
+
           <div class="editor-footer">
-            <div id="parseStatus" class="parse-status muted">Noch kein Inhalt geprüft.</div>
+            <div id="parseStatus" class="parse-status muted">Fragen können direkt bearbeitet, ergänzt oder gelöscht werden.</div>
             <div class="button-row">
-              <button id="validateBtn" class="btn secondary">Prüfen</button>
               <button id="saveGameBtn" class="btn primary">Spiel speichern</button>
             </div>
           </div>
         </section>
-
-        <aside class="panel prompt-panel">
-          <h2>Erwartetes Format</h2>
-          <p>Der Import ist absichtlich einfach. Jede Frage braucht nur Frage und Lösung, der Typ ist optional.</p>
-          <pre>{
-  "title": "Thema",
-  "questions": [
-    {
-      "type": "Rechnung",
-      "question": "...",
-      "answer": "..."
-    }
-  ]
-}</pre>
-          <p class="muted small-text">Mindestens 25 Fragen. 40 reichen in der Regel gut, weil bei unbeantworteten Fragen eine Ersatzfrage aus dem Pool gezogen wird.</p>
-        </aside>
       </div>
     </main>
   </div>
@@ -276,6 +278,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config-v2.js"></script>
-  <script src="app-v2.js"></script>
+  <script src="app-v3.js"></script>
 </body>
 </html>
