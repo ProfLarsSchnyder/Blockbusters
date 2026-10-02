@@ -75,7 +75,7 @@ const els = {};
 ].forEach(function(id){ els[id] = document.getElementById(id); });
 
 let supabaseClient = null;
-let currentUser = null;
+let currentPin = sessionStorage.getItem("blockbusters_pin") || "";
 let editingGameId = null;
 let currentGame = null;
 let splashTimer = null;
@@ -145,11 +145,7 @@ function parseGameInput(){
 function loadGames(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw){
-      const seeded = [SAMPLE_GAME];
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(seeded));
-      return seeded;
-    }
+    if(!raw) return [];
     const games = JSON.parse(raw);
     return Array.isArray(games) ? games : [];
   }catch(e){
@@ -161,6 +157,37 @@ function saveGames(games){
 }
 function getGame(id){
   return loadGames().find(function(g){ return g.id === id; }) || null;
+}
+function mapRemoteGame(row){
+  return {
+    id:row.id,
+    title:row.title,
+    questions:Array.isArray(row.questions) ? row.questions : [],
+    createdAt:row.created_at,
+    updatedAt:row.updated_at
+  };
+}
+async function syncGamesFromSupabase(){
+  const result = await supabaseClient.rpc("bb_list_games",{p_pin:currentPin});
+  if(result.error) throw result.error;
+  const games = (result.data || []).map(mapRemoteGame);
+  saveGames(games);
+  return games;
+}
+async function saveGameToSupabase(game){
+  const result = await supabaseClient.rpc("bb_save_game",{
+    p_pin:currentPin,
+    p_title:game.title,
+    p_questions:game.questions,
+    p_id:game.id
+  });
+  if(result.error) throw result.error;
+  const row = Array.isArray(result.data) ? result.data[0] : result.data;
+  return row ? mapRemoteGame(row) : game;
+}
+async function deleteGameFromSupabase(id){
+  const result = await supabaseClient.rpc("bb_delete_game",{p_pin:currentPin,p_id:id});
+  if(result.error) throw result.error;
 }
 
 function renderDashboard(){
@@ -201,37 +228,56 @@ function openEditor(gameId){
   els.parseStatus.className = "parse-status muted";
   setView(els.editorView);
 }
-function deleteGame(id){
+async function deleteGame(id){
   const game = getGame(id);
   if(!game) return;
   if(!confirm('Spiel "' + game.title + '" wirklich löschen?')) return;
-  saveGames(loadGames().filter(function(g){ return g.id !== id; }));
-  renderDashboard();
+  try{
+    await deleteGameFromSupabase(id);
+    saveGames(loadGames().filter(function(g){ return g.id !== id; }));
+    renderDashboard();
+    toast("Spiel gelöscht");
+  }catch(e){
+    toast("Löschen fehlgeschlagen");
+  }
 }
-function saveEditorGame(){
+async function saveEditorGame(){
   try{
     const parsed = parseGameInput();
     const title = (els.gameTitleInput.value.trim() || parsed.title || "Blockbusters");
     const games = loadGames();
     const now = new Date().toISOString();
+    let game;
     if(editingGameId){
       const idx = games.findIndex(function(g){ return g.id === editingGameId; });
       if(idx < 0) throw new Error("Spiel wurde nicht gefunden.");
-      games[idx] = Object.assign({},games[idx],{title:title,questions:parsed.questions,updatedAt:now});
+      game = Object.assign({},games[idx],{title:title,questions:parsed.questions,updatedAt:now});
     }else{
-      const newGame = {id:uid(),title:title,questions:parsed.questions,createdAt:now,updatedAt:now};
-      games.push(newGame);
-      editingGameId = newGame.id;
+      game = {id:uid(),title:title,questions:parsed.questions,createdAt:now,updatedAt:now};
     }
-    saveGames(games);
+
+    els.saveGameBtn.disabled = true;
+    els.parseStatus.textContent = "Wird gespeichert ...";
+    els.parseStatus.className = "parse-status muted";
+
+    const saved = await saveGameToSupabase(game);
+    const freshGames = loadGames();
+    const existingIndex = freshGames.findIndex(function(g){ return g.id === saved.id; });
+    if(existingIndex >= 0) freshGames[existingIndex] = saved;
+    else freshGames.push(saved);
+    saveGames(freshGames);
+    editingGameId = saved.id;
+
     els.parseStatus.textContent = parsed.questions.length + " Fragen gespeichert.";
     els.parseStatus.className = "parse-status ok";
     toast("Spiel gespeichert");
     renderDashboard();
     setView(els.dashboardView);
   }catch(e){
-    els.parseStatus.textContent = e.message;
+    els.parseStatus.textContent = "Speichern fehlgeschlagen. Prüfen Sie Supabase und den SQL Setup.";
     els.parseStatus.className = "parse-status bad";
+  }finally{
+    els.saveGameBtn.disabled = false;
   }
 }
 function validateEditor(){
@@ -584,25 +630,25 @@ async function initAuth(){
     return;
   }
   supabaseClient = window.supabase.createClient(CONFIG.supabaseUrl,CONFIG.supabaseAnonKey);
-  const result = await supabaseClient.auth.getSession();
-  const session = result.data && result.data.session;
-  if(session && await acceptSession(session)){
-    openApp();
+
+  if(currentPin){
+    const ok = await verifyPin(currentPin);
+    if(ok){
+      try{
+        await syncGamesFromSupabase();
+        openApp();
+        return;
+      }catch(e){}
+    }
+    currentPin = "";
+    sessionStorage.removeItem("blockbusters_pin");
   }
-  supabaseClient.auth.onAuthStateChange(async function(event,sessionNow){
-    if(sessionNow && await acceptSession(sessionNow)) openApp();
-    else if(!sessionNow) showLogin();
-  });
+  showLogin();
 }
-async function acceptSession(session){
-  const email = session && session.user && session.user.email ? session.user.email.toLowerCase() : "";
-  if(CONFIG.allowedEmail && email !== CONFIG.allowedEmail.toLowerCase()){
-    await supabaseClient.auth.signOut();
-    els.loginError.textContent = "Dieses Konto ist nicht freigeschaltet.";
-    return false;
-  }
-  currentUser = session.user;
-  return true;
+async function verifyPin(pin){
+  if(!supabaseClient) return false;
+  const result = await supabaseClient.rpc("bb_check_pin",{p_pin:String(pin)});
+  return !result.error && result.data === true;
 }
 function openApp(){
   hide(els.loginView);
@@ -611,24 +657,45 @@ function openApp(){
   renderDashboard();
 }
 function showLogin(){
-  currentUser = null;
   hide(els.app);
   show(els.loginView);
+  els.loginPassword.value = "";
+  setTimeout(function(){ els.loginPassword.focus(); },50);
 }
 async function login(event){
   event.preventDefault();
   els.loginError.textContent = "";
   if(!supabaseClient){
-    els.loginError.textContent = "Supabase ist noch nicht konfiguriert.";
+    els.loginError.textContent = "Supabase ist noch nicht erreichbar.";
     return;
   }
-  const email = els.loginEmail.value.trim();
-  const password = els.loginPassword.value;
-  const result = await supabaseClient.auth.signInWithPassword({email:email,password:password});
-  if(result.error) els.loginError.textContent = "Anmeldung fehlgeschlagen.";
+  const pin = els.loginPassword.value.trim();
+  if(!pin){
+    els.loginError.textContent = "Passwort eingeben.";
+    return;
+  }
+  const button = els.loginForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try{
+    const ok = await verifyPin(pin);
+    if(!ok){
+      els.loginError.textContent = "Falsches Passwort.";
+      return;
+    }
+    currentPin = pin;
+    sessionStorage.setItem("blockbusters_pin",pin);
+    await syncGamesFromSupabase();
+    openApp();
+  }catch(e){
+    els.loginError.textContent = "Verbindung zu Supabase fehlgeschlagen. Wurde der SQL Code bereits ausgeführt?";
+  }finally{
+    button.disabled = false;
+  }
 }
-async function logout(){
-  if(supabaseClient) await supabaseClient.auth.signOut();
+function logout(){
+  currentPin = "";
+  sessionStorage.removeItem("blockbusters_pin");
+  saveGames([]);
   showLogin();
 }
 
