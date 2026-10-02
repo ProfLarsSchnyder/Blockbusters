@@ -12,20 +12,16 @@
     <div class="login-card">
       <div class="brand-mark">B</div>
       <h1>Blockbusters</h1>
-      <p class="muted">Persönlicher Adminbereich</p>
+      <p class="muted">Passwort eingeben</p>
       <form id="loginForm" class="stack">
         <label>
-          E-Mail
-          <input id="loginEmail" type="email" autocomplete="username" required>
-        </label>
-        <label>
           Passwort
-          <input id="loginPassword" type="password" autocomplete="current-password" required>
+          <input id="loginPassword" type="password" inputmode="numeric" autocomplete="current-password" maxlength="12" required autofocus>
         </label>
-        <button class="btn primary" type="submit">Anmelden</button>
+        <button class="btn primary" type="submit">Öffnen</button>
         <div id="loginError" class="error"></div>
         <div id="loginSetupHint" class="setup-hint hidden">
-          Supabase Auth ist noch nicht konfiguriert. Tragen Sie zuerst URL und Anon Key in <code>config.js</code> ein.
+          Verbindung zu Supabase nicht möglich. Prüfen Sie <code>config.js</code> und den SQL Setup.
         </div>
       </form>
     </div>
