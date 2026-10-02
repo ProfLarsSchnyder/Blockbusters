@@ -15,13 +15,16 @@ HTML Gameshow für den Unterricht.
 - Teamnamen und 8 feste Teamfarben
 - Auswahlrecht für Startteam
 - nummeriertes 25 Felder Wabenbrett
-- Buzzer mit A für Team 1 und L für Team 2
+- Nutzung mit externem Buzzer, die Lehrperson markiert im Spiel, welches Team zuerst gebuzzert hat
 - falsche erste Antwort sperrt dieses Team für die aktuelle Frage
 - das andere Team erhält allein die zweite Chance
 - ein Feld wird nur bei richtiger Antwort vergeben
 - bei zwei falschen Antworten oder keiner Antwort kann eine neue Frage für dasselbe Feld gezogen werden
 - das Team mit der richtigen Antwort erhält das nächste Auswahlrecht
 - automatische Gewinnprüfung
+- automatische Erkennung, wenn kein Team mehr eine Gewinnverbindung herstellen kann
+- bereits gestellte Fragen bleiben bei einer direkt anschliessenden neuen Partie aus dem Fragenpool
+- kleine Anzeige der noch verfügbaren Fragen im Spiel
 
 ## Supabase
 
