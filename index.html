@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
   <title>Blockbusters</title>
-  <link rel="stylesheet" href="styles-v2.css">
+  <link rel="stylesheet" href="styles-v3.css">
 </head>
 <body>
   <section id="loginView" class="screen login-screen">
@@ -145,7 +145,7 @@
         <div><span>8</span><p>Erste vollständige Verbindung gewinnt.</p></div>
       </div>
       <div class="instruction-buzzer">
-        <strong>Buzzer:</strong> Team 1 drückt <kbd>A</kbd>, Team 2 drückt <kbd>L</kbd>. Alternativ können die grossen Buzzerflächen auf dem Bildschirm angeklickt werden.
+        <strong>Buzzer:</strong> Die Teams buzzern mit Ihrem externen Buzzer. Klicken Sie danach im Spiel auf das Team, das zuerst gebuzzert hat.
       </div>
       <button id="instructionsNextBtn" class="btn primary large">Teams einrichten</button>
     </div>
@@ -205,13 +205,17 @@
         </div>
         <div id="team1Card" class="score-card">
           <strong id="team1Display"></strong>
-          <span>links → rechts</span>
+          <span class="goal-direction">LINKS → RECHTS</span>
           <b id="team1Count">0 Felder</b>
         </div>
         <div id="team2Card" class="score-card">
           <strong id="team2Display"></strong>
-          <span>oben → unten</span>
+          <span class="goal-direction">OBEN → UNTEN</span>
           <b id="team2Count">0 Felder</b>
+        </div>
+        <div class="pool-card">
+          <span>Fragen im Pool</span>
+          <strong id="poolRemaining">0</strong>
         </div>
       </aside>
     </div>
@@ -226,8 +230,8 @@
       <div id="questionText" class="question-text"></div>
 
       <div id="buzzArea" class="buzz-area">
-        <button id="buzzTeam1" class="buzz-button"><span id="buzzTeam1Name"></span><kbd>A</kbd></button>
-        <button id="buzzTeam2" class="buzz-button"><span id="buzzTeam2Name"></span><kbd>L</kbd></button>
+        <button id="buzzTeam1" class="buzz-button"><span id="buzzTeam1Name"></span><small>hat zuerst gebuzzert</small></button>
+        <button id="buzzTeam2" class="buzz-button"><span id="buzzTeam2Name"></span><small>hat zuerst gebuzzert</small></button>
       </div>
 
       <div id="buzzStatus" class="buzz-status">Beide Teams dürfen buzzern.</div>
@@ -268,8 +272,22 @@
       <h1 id="winnerName"></h1>
       <p>hat die Verbindung hergestellt.</p>
       <div class="button-row center">
-        <button id="winnerRestartBtn" class="btn primary">Nochmals spielen</button>
+        <button id="winnerRestartBtn" class="btn primary">Mit restlichen Fragen nochmals spielen</button>
         <button id="winnerHomeBtn" class="btn secondary">Zur Spieleübersicht</button>
+      </div>
+    </div>
+  </dialog>
+
+
+  <dialog id="blockedDialog">
+    <div class="winner-card blocked-card">
+      <span>BLOCKBUSTERS</span>
+      <h1>Brett blockiert</h1>
+      <p>Kein Team kann mehr eine vollständige Verbindung herstellen.</p>
+      <p class="muted-dark"><strong id="blockedPoolRemaining">0</strong> Fragen sind noch im Pool.</p>
+      <div class="button-row center">
+        <button id="blockedRestartBtn" class="btn primary">Mit restlichen Fragen neu starten</button>
+        <button id="blockedHomeBtn" class="btn secondary">Zur Spieleübersicht</button>
       </div>
     </div>
   </dialog>
@@ -278,6 +296,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config-v2.js"></script>
-  <script src="app-v3.js"></script>
+  <script src="app-v4.js"></script>
 </body>
 </html>
